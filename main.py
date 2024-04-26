@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 # Internal imports
 from models import Conversation, SessionLocal
 from utils import send_message, logger
+from bot.bot import Bot
 
 
 app = FastAPI()
@@ -33,25 +34,28 @@ async def index():
 @app.post("/message")
 async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_db)):
     # Extract the phone number from the incoming webhook request
+
     form_data = await request.form()
     whatsapp_number = form_data['From'].split("whatsapp:")[-1]
     print(f"Sending the ChatGPT response to this number: {whatsapp_number}")
 
     # Call the OpenAI API to generate text with ChatGPT
+    new_bot = Bot()
     messages = [{"role": "user", "content": Body}]
     messages.append(
         {"role": "system", "content": "You're an investor, a serial founder and you've sold many startups. You understand nothing but business."})
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=200,
-        n=1,
-        stop=None,
-        temperature=0.5
-    )
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=messages,
+    #     max_tokens=200,
+    #     n=1,
+    #     stop=None,
+    #     temperature=0.5
+    # )
 
-    # The generated text
-    chatgpt_response = response.choices[0].message.content
+    # # The generated text
+    # chatgpt_response = response.choices[0].message.content
+    chatgpt_response = new_bot.send_message(Body)
 
     # Store the conversation in the database
     try:
