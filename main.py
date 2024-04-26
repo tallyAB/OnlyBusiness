@@ -40,7 +40,11 @@ async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_
     print(f"Sending the ChatGPT response to this number: {whatsapp_number}")
 
     # Call the OpenAI API to generate text with ChatGPT
-    new_bot = Bot()
+
+
+
+    new_bot = Bot(thread_old='thread_YColdX7bNaptVoggzz58TMYu')
+    new_bot.send_message('Could you repeat my order?')
     messages = [{"role": "user", "content": Body}]
     messages.append(
         {"role": "system", "content": "You're an investor, a serial founder and you've sold many startups. You understand nothing but business."})

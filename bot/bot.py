@@ -11,10 +11,13 @@ class Bot:
     def __init__(self, api_key = "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", assistant_id = "asst_8FWoRndfw1BUlalAHW0Xib45", thread_old = None , run_old = None):
         self.client = OpenAI(api_key=api_key)
         self.assistant_id = assistant_id
+        
         if thread_old is None:
             self.thread = self.client.beta.threads.create()
         else:
             self.thread = self.client.beta.threads.retrieve(thread_id = thread_old)
+
+
         self.assistant = self.client.beta.assistants.retrieve(assistant_id = self.assistant_id)
         self.history = [] # contains tuple of (query response) in ascending order (latest response at end of list)
     def print_history(self):
