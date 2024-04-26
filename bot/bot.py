@@ -42,7 +42,7 @@ class Bot:
         SPREADSHEET_ID = '1E_TLxnvSQgz2E7Y-5kFLJZtf8OogxPklmCQ819ip-vA'
         RANGE_NAME = 'Sheet1'
 
-        
+
         # Authenticate and build the service
         credentials = Credentials.from_service_account_file(
                 SERVICE_ACCOUNT_FILE, scopes=['https://www.googleapis.com/auth/spreadsheets'])
@@ -71,6 +71,7 @@ class Bot:
         return response
     
 
+
     def send_message(self, message_content):
         """
         Sends a message to the bot and waits for the response.
@@ -98,7 +99,6 @@ class Bot:
             check = self.call_required_function(run.required_action.submit_tool_outputs.tool_calls)
             print(check)
 
-        
         messages = self.client.beta.threads.messages.list(thread_id=self.thread.id)
        
         response = messages.to_dict()["data"][0]["content"][0]['text']['value']
