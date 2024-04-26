@@ -4,6 +4,8 @@ from fastapi import FastAPI, Form, Depends, Request
 from decouple import config
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
 # Internal imports
 from models import Conversation, SessionLocal
@@ -41,10 +43,9 @@ async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_
 
     # Call the OpenAI API to generate text with ChatGPT
 
+    new_bot = Bot(thread_old='thread_YColdX7bNaptVoggzz58TMYu', whatsapp_number = whatsapp_number)
+    
 
-
-    new_bot = Bot(thread_old='thread_YColdX7bNaptVoggzz58TMYu')
-    new_bot.send_message('Could you repeat my order?')
     messages = [{"role": "user", "content": Body}]
     messages.append(
         {"role": "system", "content": "You're an investor, a serial founder and you've sold many startups. You understand nothing but business."})
@@ -76,3 +77,6 @@ async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_
         logger.error(f"Error storing conversation in database: {e}")
     send_message(whatsapp_number, chatgpt_response)
     return ""
+
+
+get_prev_thread()
