@@ -3,19 +3,15 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 from decouple import config
 
+import os
 
-url = URL.create(
-    drivername="postgresql",
-    username=config("DB_USER"),
-    password=config("DB_PASSWORD"),
-    host="localhost",
-    database="mydb",
-    port=5432
-)
+# Fetch the internal database URL provided by Render
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(url)
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
+
 
 class Conversation(Base):
     __tablename__ = "conversations"

@@ -6,17 +6,19 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from datetime import date
 import pandas as pd
+import os
 
-
-# import API_RowAppend file
 
 def insert_thread_id(whatsapp_num, thread_id):
     print(whatsapp_num, thread_id)
     whatsapp_num = '\'' + whatsapp_num
     values = [[whatsapp_num, thread_id]]
 
-    SERVICE_ACCOUNT_FILE = r'C:\Users\Talha Abrar\Desktop\LUMS\SENIOR\Spring 2024\GEN AI\Project\OnlyBusiness\SpreadsheetAPI\onlybusinessdummy-8706fb48751e.json'
-    SPREADSHEET_ID = '1E_TLxnvSQgz2E7Y-5kFLJZtf8OogxPklmCQ819ip-vA'
+    SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
+
+    SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
     RANGE_NAME = 'Sheet2'
 
     # Authenticate and build the service
@@ -38,7 +40,9 @@ def insert_thread_id(whatsapp_num, thread_id):
 
 
 class Bot:
-    def __init__(self, whatsapp_number, api_key="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", assistant_id="asst_8FWoRndfw1BUlalAHW0Xib45", thread_old=None, run_old=None):
+
+    def __init__(self, whatsapp_number, assistant_id="asst_8FWoRndfw1BUlalAHW0Xib45", thread_old=None, run_old=None):
+        api_key = os.getenv("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key)
         self.assistant_id = assistant_id
         self.number = whatsapp_number
@@ -62,8 +66,11 @@ class Bot:
 
     def get_spreadsheet_data(self):
 
-        SERVICE_ACCOUNT_FILE = r'C:\Users\Talha Abrar\Desktop\LUMS\SENIOR\Spring 2024\GEN AI\Project\OnlyBusiness\SpreadsheetAPI\onlybusinessdummy-8706fb48751e.json'
-        SPREADSHEET_ID = '1E_TLxnvSQgz2E7Y-5kFLJZtf8OogxPklmCQ819ip-vA'
+        SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
+
+        SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
         RANGE_NAME = 'Sheet1'
 
         # Authenticate and build the service
@@ -102,15 +109,15 @@ class Bot:
 
     def insert_data_to_spreadsheet(self, values=None):
         # schema : [order_id, customer_id, customer_name, order date, order items, status, rider, Rider contact number, Delivery address, Amount, Rating]
-
-        # values should be passed in the following format:
-
         # values = [["23", "69", "Zain Ali Khokhar", "01-03-2024", "HP Envy Screen Protector, HP Envy Hinge", "Delivered", "Sponge-Bob", "03248433434", "Out of Lahore", "$6666.44", "9", "Added through API"]]
+
         values[0][1] = self.number
 
-        # SERVICE_ACCOUNT_FILE = r'C:\Users\Ahad Imran\Desktop\GenAI\Project\onlybusinessdummy-8706fb48751e.json'
-        SERVICE_ACCOUNT_FILE = r'C:\Users\Talha Abrar\Desktop\LUMS\SENIOR\Spring 2024\GEN AI\Project\OnlyBusiness\SpreadsheetAPI\onlybusinessdummy-8706fb48751e.json'
-        SPREADSHEET_ID = '1E_TLxnvSQgz2E7Y-5kFLJZtf8OogxPklmCQ819ip-vA'
+        SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
+
+        SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
         RANGE_NAME = 'Sheet1'
 
         # Authenticate and build the service

@@ -14,11 +14,9 @@ from bot.bot import Bot
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import pandas as pd
-
+import os
 
 app = FastAPI()
-# Set up the OpenAI API client
-# openai.api_key = config("OPENAI_API_KEY")
 
 
 def get_db():
@@ -36,32 +34,20 @@ async def index():
 
 @app.post("/message")
 async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_db)):
-    # Extract the phone number from the incoming webhook request
 
+    # Extract the phone number from the incoming webhook request
     form_data = await request.form()
     whatsapp_number = form_data['From'].split("whatsapp:")[-1]
 
     thread_id = fetch_thread(whatsapp_number)
 
     # Call the OpenAI API to generate text with ChatGPT
-
     new_bot = Bot(thread_old=thread_id,
                   whatsapp_number=whatsapp_number)
 
     messages = [{"role": "user", "content": Body}]
     messages.append(
         {"role": "system", "content": "You're an investor, a serial founder and you've sold many startups. You understand nothing but business."})
-    # response = openai.ChatCompletion.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=messages,
-    #     max_tokens=200,
-    #     n=1,
-    #     stop=None,
-    #     temperature=0.5
-    # )
-
-    # # The generated text
-    # chatgpt_response = response.choices[0].message.content
 
     # The generated text
     chatgpt_response = new_bot.send_message(Body)
@@ -88,8 +74,11 @@ async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_
 def fetch_thread(whatsapp_num):
     # schema : [order_id, customer_id, customer_name, order date, order items, status, rider, Rider contact number, Delivery address, Amount, Rating]
 
-    SERVICE_ACCOUNT_FILE = r'C:\Users\Talha Abrar\Desktop\LUMS\SENIOR\Spring 2024\GEN AI\Project\OnlyBusiness\SpreadsheetAPI\onlybusinessdummy-8706fb48751e.json'
-    SPREADSHEET_ID = '1E_TLxnvSQgz2E7Y-5kFLJZtf8OogxPklmCQ819ip-vA'
+    SERVICE_ACCOUNT_PATH = "SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
+
+    SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
     RANGE_NAME = 'Sheet2'
 
     # Authenticate and build the service
