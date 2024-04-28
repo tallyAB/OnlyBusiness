@@ -3,7 +3,10 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import declarative_base, sessionmaker
 from decouple import config
 
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 # Fetch the internal database URL provided by Render
 DATABASE_URL = os.getenv("DATABASE_URL")

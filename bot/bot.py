@@ -7,10 +7,10 @@ from googleapiclient.discovery import build
 from datetime import date
 import pandas as pd
 import os
+from dotenv import load_dotenv
 
 
 def insert_thread_id(whatsapp_num, thread_id):
-    print(whatsapp_num, thread_id)
     whatsapp_num = '\'' + whatsapp_num
     values = [[whatsapp_num, thread_id]]
 
@@ -42,6 +42,7 @@ def insert_thread_id(whatsapp_num, thread_id):
 class Bot:
 
     def __init__(self, whatsapp_number, assistant_id="asst_8FWoRndfw1BUlalAHW0Xib45", thread_old=None, run_old=None):
+        load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key)
         self.assistant_id = assistant_id
@@ -169,11 +170,9 @@ class Bot:
         )
         run = self.wait_on_run(run, self.thread)
 
-        print(run.status)
         if (run.status == 'requires_action'):
             check = self.call_required_function(
                 run.required_action.submit_tool_outputs.tool_calls)
-            print(check)
 
         messages = self.client.beta.threads.messages.list(
             thread_id=self.thread.id)

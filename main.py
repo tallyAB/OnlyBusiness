@@ -15,6 +15,9 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 import pandas as pd
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -66,7 +69,6 @@ async def reply(request: Request, Body: str = Form(), db: Session = Depends(get_
         db.rollback()
         logger.error(f"Error storing conversation in database: {e}")
 
-    print(f"Sending the ChatGPT response to this number: {whatsapp_number}")
     send_message(whatsapp_number, chatgpt_response)
     return ""
 
@@ -96,9 +98,7 @@ def fetch_thread(whatsapp_num):
 
     df = pd.DataFrame(data_rows, columns=column_names)
     query_results = df[df['Phone Number'] == whatsapp_num]
-    print("CHECK\n", df['Phone Number'], "\n", whatsapp_num)
     if len(query_results) > 0:
-        print("LAME", query_results['Thread ID'].values[0])
         return query_results['Thread ID'].values[0]
     else:
         return None
