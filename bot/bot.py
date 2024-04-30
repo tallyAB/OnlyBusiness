@@ -110,55 +110,61 @@ class Bot:
 
     def insert_data_to_spreadsheet(self, values=None):
         # schema : [order_id, customer_id, customer_name, order date, order items, status, rider, Rider contact number, Delivery address, Amount, Rating]
+
+        # values should be passed in the following format:
+
         # values = [["23", "69", "Zain Ali Khokhar", "01-03-2024", "HP Envy Screen Protector, HP Envy Hinge", "Delivered", "Sponge-Bob", "03248433434", "Out of Lahore", "$6666.44", "9", "Added through API"]]
+        try:
 
-        values[0][1] = self.number
+            values[0][1] = self.number
 
-        SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
+            SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
+            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+            SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, SERVICE_ACCOUNT_PATH)
 
-        SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-        RANGE_NAME = 'Sheet1'
+            SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+            RANGE_NAME = 'Sheet1'
 
-        # Authenticate and build the service
-        credentials = Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=['https://www.googleapis.com/auth/spreadsheets'])
-        service = build('sheets', 'v4', credentials=credentials)
+            # Authenticate and build the service
+            credentials = Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=['https://www.googleapis.com/auth/spreadsheets'])
+            service = build('sheets', 'v4', credentials=credentials)
 
-        # Call the Sheets API to append the data
-        request = service.spreadsheets().values().append(
-            spreadsheetId=SPREADSHEET_ID,
-            range=RANGE_NAME,
-            valueInputOption='USER_ENTERED',
-            insertDataOption='INSERT_ROWS',
-            body={'values': values}
-        )
-        response = request.execute()
+            # Call the Sheets API to append the data
+            request = service.spreadsheets().values().append(
+                spreadsheetId=SPREADSHEET_ID,
+                range=RANGE_NAME,
+                valueInputOption='USER_ENTERED',
+                insertDataOption='INSERT_ROWS',
+                body={'values': values}
+            )
+            response = request.execute()
 
-        return "Successfully added row."
+            return 'Successfully added order!'
+
+        except Exception as e:
+
+            print('Failed to add order!')
 
     def call_required_function(self, tools_called):
+
+        tool_outputs = []
+
+        print(tools_called)
 
         for tool in tools_called:
 
             if (tool.function.name == 'insert_data_to_spreadsheet'):
                 values_param = json.loads(tool.function.arguments)['values']
+
                 response = self.insert_data_to_spreadsheet(values_param)
 
-        return response
+                tool_outputs.append(
+                    {'tool_call_id': tool.id, 'output': response})
+
+        return tool_outputs
 
     def send_message(self, message_content):
-        """
-        Sends a message to the bot and waits for the response.
-
-        Args:
-        message_content (str): The content of the message the user sends to the bot.
-
-        Returns:
-        str: The bot's response.
-        """
-
         message = self.client.beta.threads.messages.create(
             thread_id=self.thread.id,
             role="user",
@@ -170,9 +176,16 @@ class Bot:
         )
         run = self.wait_on_run(run, self.thread)
 
+        print(run.status)
         if (run.status == 'requires_action'):
-            check = self.call_required_function(
+            tool_outputs = self.call_required_function(
                 run.required_action.submit_tool_outputs.tool_calls)
+
+            run = self.client.beta.threads.runs.submit_tool_outputs_and_poll(
+                thread_id=self.thread.id,
+                run_id=run.id,
+                tool_outputs=tool_outputs
+            )
 
         messages = self.client.beta.threads.messages.list(
             thread_id=self.thread.id)
