@@ -108,15 +108,16 @@ class Bot:
 
         return run
 
-    def insert_data_to_spreadsheet(self, values=None):
+    def insert_data_to_spreadsheet(self, values=None, order_id=None):
         # schema : [order_id, customer_id, customer_name, order date, order items, status, rider, Rider contact number, Delivery address, Amount, Rating]
 
         # values should be passed in the following format:
 
         # values = [["23", "69", "Zain Ali Khokhar", "01-03-2024", "HP Envy Screen Protector, HP Envy Hinge", "Delivered", "Sponge-Bob", "03248433434", "Out of Lahore", "$6666.44", "9", "Added through API"]]
         try:
-
             values[0][1] = self.number
+            order_id = order_id +1
+            values[0][0] = order_id
 
             SERVICE_ACCOUNT_PATH = "../SpreadsheetAPI/onlybusinessdummy-8706fb48751e.json"
             BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -140,31 +141,29 @@ class Bot:
             )
             response = request.execute()
 
-            return 'Successfully added order!'
+            return 'Successfully added order!', order_id
 
         except Exception as e:
 
             print('Failed to add order!')
 
-    def call_required_function(self, tools_called):
+    def call_required_function(self, tools_called, order_id):
 
         tool_outputs = []
 
         print(tools_called)
-
+        returned_id = order_id
         for tool in tools_called:
-
+            
             if (tool.function.name == 'insert_data_to_spreadsheet'):
                 values_param = json.loads(tool.function.arguments)['values']
+                
+                response, returned_id = self.insert_data_to_spreadsheet(values=values_param, order_id = order_id)
 
-                response = self.insert_data_to_spreadsheet(values_param)
+                tool_outputs.append({'tool_call_id' : tool.id, 'output' : response})
+        return tool_outputs, returned_id
 
-                tool_outputs.append(
-                    {'tool_call_id': tool.id, 'output': response})
-
-        return tool_outputs
-
-    def send_message(self, message_content):
+    def send_message(self, message_content, order_id):
         message = self.client.beta.threads.messages.create(
             thread_id=self.thread.id,
             role="user",
@@ -175,16 +174,16 @@ class Bot:
             assistant_id=self.assistant.id,
         )
         run = self.wait_on_run(run, self.thread)
+        returned_id = order_id
 
         print(run.status)
         if (run.status == 'requires_action'):
-            tool_outputs = self.call_required_function(
-                run.required_action.submit_tool_outputs.tool_calls)
+            tool_outputs, returned_id = self.call_required_function(run.required_action.submit_tool_outputs.tool_calls, order_id)
 
             run = self.client.beta.threads.runs.submit_tool_outputs_and_poll(
-                thread_id=self.thread.id,
-                run_id=run.id,
-                tool_outputs=tool_outputs
+            thread_id=self.thread.id,
+            run_id=run.id,
+            tool_outputs=tool_outputs
             )
 
         messages = self.client.beta.threads.messages.list(
@@ -192,4 +191,4 @@ class Bot:
 
         response = messages.to_dict()["data"][0]["content"][0]['text']['value']
         self.history.append((message_content, response))
-        return response
+        return response, returned_id
